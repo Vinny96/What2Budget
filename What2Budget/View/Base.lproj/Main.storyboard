@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="MMt-Rv-Ypc">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17703"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="What2Budget" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6ky-ru-m5X">
+                                <rect key="frame" x="327" y="772" width="67" height="30"/>
+                                <color key="backgroundColor" systemColor="secondarySystemGroupedBackgroundColor"/>
+                                <state key="normal" title="Groceries">
+                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="d8l-4G-h8D">
+                                <rect key="frame" x="328" y="683" width="66" height="30"/>
+                                <color key="backgroundColor" systemColor="secondarySystemGroupedBackgroundColor"/>
+                                <state key="normal" title="Shopping">
+                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="goToShoppingVC:" destination="BYZ-38-t0r" eventType="touchUpInside" id="tX8-TK-Fue"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="12n-KE-Iju">
+                                <rect key="frame" x="37" y="683" width="30" height="30"/>
+                                <color key="backgroundColor" systemColor="secondarySystemGroupedBackgroundColor"/>
+                                <state key="normal" title="Bills">
+                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OFr-R9-huf">
+                                <rect key="frame" x="43" y="772" width="41" height="30"/>
+                                <color key="backgroundColor" systemColor="secondarySystemGroupedBackgroundColor"/>
+                                <state key="normal" title="Home">
+                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="goToHomeVC:" destination="BYZ-38-t0r" eventType="touchUpInside" id="umv-rI-KeU"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <color key="backgroundColor" systemColor="linkColor"/>
+                        <constraints>
+                            <constraint firstItem="6ky-ru-m5X" firstAttribute="top" secondItem="d8l-4G-h8D" secondAttribute="bottom" constant="59" id="0w5-1u-vKY"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="6ky-ru-m5X" secondAttribute="bottom" constant="60" id="6w3-wm-H2s"/>
+                            <constraint firstItem="OFr-R9-huf" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="43" id="Eze-59-G3z"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="OFr-R9-huf" secondAttribute="bottom" constant="60" id="J44-aT-Mre"/>
+                            <constraint firstItem="OFr-R9-huf" firstAttribute="top" secondItem="12n-KE-Iju" secondAttribute="bottom" constant="59" id="UYS-Nj-bdt"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="d8l-4G-h8D" secondAttribute="trailing" constant="20" id="ieU-b0-qNB"/>
+                            <constraint firstItem="12n-KE-Iju" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="37" id="mrd-YN-8ln"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="6ky-ru-m5X" secondAttribute="trailing" constant="20" id="r9h-DS-Vuo"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="bWq-lz-KKO"/>
+                    <connections>
+                        <segue destination="Pts-dV-s5A" kind="show" identifier="toShopping" id="mIZ-A1-Wlr"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1058" y="139"/>
+        </scene>
+        <!--Shopping View Controller-->
+        <scene sceneID="DtA-0s-usb">
+            <objects>
+                <viewController id="Pts-dV-s5A" customClass="ShoppingViewController" customModule="What2Budget" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Dll-hQ-TL5">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translucent="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7Eg-nE-Cj3">
+                                <rect key="frame" x="0.0" y="813" width="414" height="49"/>
+                                <items>
+                                    <barButtonItem title="Ite" image="plus" catalog="system" id="aqy-i9-ip5">
+                                        <color key="tintColor" name="ShoppingCellColour"/>
+                                        <connections>
+                                            <action selector="addShoppingExpense:" destination="Pts-dV-s5A" id="eFH-bX-t7t"/>
+                                        </connections>
+                                    </barButtonItem>
+                                </items>
+                                <color key="barTintColor" name="shoppingToolBar"/>
+                            </toolbar>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="vnM-ue-S4H">
+                                <rect key="frame" x="0.0" y="88" width="414" height="725"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            </tableView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="MOq-5B-ngq"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="7Eg-nE-Cj3" secondAttribute="trailing" id="0Hb-QH-hhC"/>
+                            <constraint firstItem="7Eg-nE-Cj3" firstAttribute="leading" secondItem="Dll-hQ-TL5" secondAttribute="leading" id="GTv-Ud-uHN"/>
+                            <constraint firstItem="7Eg-nE-Cj3" firstAttribute="top" secondItem="vnM-ue-S4H" secondAttribute="bottom" id="Jz2-qR-08q"/>
+                            <constraint firstItem="vnM-ue-S4H" firstAttribute="top" secondItem="MOq-5B-ngq" secondAttribute="top" id="LEg-6b-o9a"/>
+                            <constraint firstItem="MOq-5B-ngq" firstAttribute="bottom" secondItem="7Eg-nE-Cj3" secondAttribute="bottom" id="SAm-pW-r9Z"/>
+                            <constraint firstItem="vnM-ue-S4H" firstAttribute="leading" secondItem="Dll-hQ-TL5" secondAttribute="leading" id="UxP-OD-BN4"/>
+                            <constraint firstAttribute="trailing" secondItem="vnM-ue-S4H" secondAttribute="trailing" id="l2z-MV-7df"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="Tm7-QH-ABh"/>
+                    <connections>
+                        <outlet property="tableView" destination="vnM-ue-S4H" id="U4l-Gk-O4a"/>
+                        <outlet property="toolBar" destination="7Eg-nE-Cj3" id="epX-Sd-peV"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="JEa-02-D5B" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1978" y="139"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="oe8-Vd-biW">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="MMt-Rv-Ypc" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="ai5-1w-CEl">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="sO8-gg-khn"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="VQL-cX-Lve" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="137.68115942028987" y="138.61607142857142"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="plus" catalog="system" width="128" height="113"/>
+        <namedColor name="ShoppingCellColour">
+            <color red="0.99215686274509807" green="0.72156862745098038" blue="0.15294117647058825" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="shoppingToolBar">
+            <color red="0.41176470588235292" green="0.18823529411764706" blue="0.76470588235294112" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="linkColor">
+            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="secondarySystemGroupedBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
