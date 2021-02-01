@@ -9,6 +9,19 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    // variables
+    internal var monthlyIncome : Float = Float()
+    
+    // IB Outlets
+    @IBOutlet weak var monthlyIncomeLabel: UILabel!
+    @IBOutlet weak var groceriesAmount: UILabel!
+    @IBOutlet weak var shoppingAmount: UILabel!
+    @IBOutlet weak var billsAmount: UILabel!
+    @IBOutlet weak var homeAmount: UILabel!
+    
+    
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         initializeVC()
@@ -19,11 +32,34 @@ class ViewController: UIViewController {
     {
         navigationController?.navigationBar.barTintColor = UIColor(named: "mainVcColour")
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        monthlyIncome = getMonthlyIncome()
     }
+    
+    private func getMonthlyIncome() -> Float
+    {
+        if(monthlyIncomeLabel.text == "")
+        {
+            let monthlyIncomeToReturn : Float = 0.0
+            return monthlyIncomeToReturn
+        }
+        else
+        {
+            let monthlyIncomeAsString = monthlyIncomeLabel.text!
+            let monthlyIncomeToReturn = (monthlyIncomeAsString as NSString).floatValue
+            return monthlyIncomeToReturn
+        }
+    }
+    
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem = backBarButtonItem
+        if(segue.identifier == "toShopping")
+        {
+            let destinationSegue : ShoppingViewController = segue.destination as! ShoppingViewController
+            destinationSegue.shoppingExpenseAmount = (shoppingAmount.text! as NSString).floatValue
+            print((shoppingAmount.text! as NSString).floatValue)
+        }
         
     }
     

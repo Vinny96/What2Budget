@@ -12,14 +12,17 @@ class ShoppingViewController : UIViewController
 {
     // variables
     private let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    private let typeOfObject : String = "Shopping"
+    private let typeOfObject : String = "Shopping" // to be passed into Expense model object
     private var arrayOfExpenses : [ExpenseModel] = [] // will be loaded in via core data
     private var arrayOfShoppingExpenses : [ShoppingExpense] = [] // this is the array that we will be directly working with and this array will have the exact same contents as arrayOfShoppingExpenses
+    private var totalAmountSpent : Float = 0 // two helper functions for this property
+    internal var shoppingExpenseAmount : Float = 0.0 // this will get a value from the prior VC
     
     // IB Outlets
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var toolBar: UIToolbar!
-    
+    @IBOutlet weak var shoppingProgress: UIProgressView!
+    @IBOutlet weak var shoppingExpenseAmountLabel: UILabel!
     
     
     
@@ -126,6 +129,8 @@ class ShoppingViewController : UIViewController
                 self.saveContext()
                 DispatchQueue.main.async {
                     self.tableView.reloadData()
+                    self.updateProgressBar(amountToAdd : expenseToAdd.amount)
+                    // this will update the progress bar with each shopping expense object we made.
                 }
             }
             else
@@ -182,14 +187,18 @@ class ShoppingViewController : UIViewController
     //MARK: - Functions
     private func initializeVC()
     {
+        title = "Shopping"
         navigationController?.navigationBar.barTintColor = UIColor(named: "shoppingToolBarColour")
         loadContext()
         loadArrayOfShoppingExpenses()
+        initializeProgressBar()
+        shoppingExpenseAmountLabel.text = String(shoppingExpenseAmount)
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = 190
         tableView.register(UINib(nibName: "shoppingCell", bundle: .main), forCellReuseIdentifier: "shoppingCellToUse")
-        title = "Shopping"
+        
+       // set code so this can only be viewed in potrait not landscape
     }
     
     
@@ -204,10 +213,36 @@ class ShoppingViewController : UIViewController
         }
     }
     
-    private func createShoppingExpense(expenseModel : ExpenseModel) -> ShoppingExpense
+    private func createShoppingExpense(expenseModel : ExpenseModel) -> ShoppingExpense // O(1) runtime
     {
         let shoppingExpenseToReturn = ShoppingExpense(retailerNameVal: expenseModel.name!, amountSpentVal: expenseModel.amount, noteVal: expenseModel.note!)
         return shoppingExpenseToReturn
+    }
+    
+    //MARK: - Progress Bar Functions and helpers
+    private func initializeProgressBar()
+    {
+        // so we need to calculate the total amount of purchases made which we can get from the aray of shopping expenses.
+        let totalAmountSpent : Float = getTotalAmountSpent()
+        updateProgressBar(amountToAdd : totalAmountSpent)
+    }
+    
+    private func getTotalAmountSpent() -> Float
+    {
+        var totalAmountSpent : Float = 0
+        for shoppingExpense in arrayOfShoppingExpenses
+        {
+            totalAmountSpent += shoppingExpense.getAmountSpent()
+        }
+        return totalAmountSpent
+    }
+    
+    private func updateProgressBar(amountToAdd : Float) // this method also updates the total amount with each purchase
+    {
+        totalAmountSpent += amountToAdd
+        shoppingProgress.progress = totalAmountSpent / shoppingExpenseAmount
+        print(totalAmountSpent)
+        print(shoppingExpenseAmount)
     }
     
 }
