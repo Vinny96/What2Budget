@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17709" systemVersion="20C69" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="ExpenseModel" representedClassName="ExpenseModel" syncable="YES" codeGenerationType="class">
+        <attribute name="amountSpent" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="receipt" optional="YES" attributeType="Binary"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="typeOfExpense" attributeType="String"/>
+    </entity>
+    <entity name="MainExpenseModel" representedClassName="MainExpenseModel" syncable="YES" codeGenerationType="class">
+        <attribute name="amountAllocated" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="amountSpent" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="expenseName" optional="YES" attributeType="String"/>
+    </entity>
+    <elements>
+        <element name="MainExpenseModel" positionX="-63" positionY="-18" width="128" height="74"/>
+        <element name="ExpenseModel" positionX="-45" positionY="27" width="128" height="89"/>
+    </elements>
+</model>
