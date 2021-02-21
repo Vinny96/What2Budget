@@ -1,0 +1,13 @@
+So for mainView controller all of the expense amounts will be initialized to 0  in the shipping unit.
+What we want the charting API to do is to chart the amount spent on whatever category they might be on compared to much how they have allocated for it. Completed
+I have decided to ditch the pie chart as when there is a lot of data its way too packed and crunched together.
+
+The charting software can be used for any other expense object as well so we don't have to create anymore
+Now there are some more categories we want to add and they are as follows : Restaurants, Commute, LifeStyle, Subscriptions, Home.
+This apps needs to look prettier and needs to have unique functioanlity, this is where the coupon api kicks in snd being able to compare your previous months entries.
+
+The categories we are going to have are the following: lifestyle,transportation,car,house,subscriptions,groceries
+ - in order to properly to show the user what kind of things they should put in the cateogires we will use pictures to show them. So for example the lifestyle category will have a picture of a restaurant, weights, and a shopping bag.
+ - subscritpions will have a picture of music ad maybe TV Show and movies as well. Things like that. 
+
+For the cloud functionality when we export it we are going to let the user give a name to the data we export rather than us do that for them. If the user started the app on an irregular pay cycle we shouldn't automatically give the title of the export file the current month because maybe the user wants it to cover two months. So we will let them give it the name. 
