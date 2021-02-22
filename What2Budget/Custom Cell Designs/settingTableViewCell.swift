@@ -1,21 +1,14 @@
 //
-//  groceryCell.swift
+//  settingTableViewCell.swift
 //  What2Budget
 //
-//  Created by Vinojen Gengatharan on 2021-01-31.
+//  Created by Vinojen Gengatharan on 2021-02-21.
 //
 
 import UIKit
 
-class groceryCell: UITableViewCell {
+class settingTableViewCell: UITableViewCell {
 
-    //IB Outlets
-    @IBOutlet weak var grocerTitleLabel: UILabel!
-    @IBOutlet weak var amountSpentLabel: UILabel!
-    @IBOutlet weak var notesLabel: UILabel!
-    
-    
-    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
