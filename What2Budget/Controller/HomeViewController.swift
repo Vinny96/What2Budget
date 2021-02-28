@@ -52,111 +52,28 @@ class HomeViewController : UIViewController
     //MARK: - CloudKit Functions
     private func saveToCloudKitDB()
     {
-        // creating and saving our record objects
-        let record = CKRecord(recordType: ExpenseNames.groceriesExpenseName)
-        record.setValue(amountSpentDict[ExpenseNames.groceriesExpenseName], forKey: ExpenseNames.groceriesExpenseName)
+        let recordName = ("ExpensesForDate")
+        let datePeriod = ("\(defaults.string(forKey: "Set Start Date") ?? "") \(defaults.string(forKey: "Seet End Date") ?? "")")
+        let record = CKRecord(recordType: recordName)
+        record.setValue(amountSpentDict, forKey: datePeriod)
         cloudKitDataBase.save(record) { (ckRecord, error) in
             if(ckRecord != nil || error != nil)
             {
-                print("Record was successfully saved in our database.")
+                print("Successfully saved the record to the cloudKitDataBase")
             }
             else
             {
-                print("The CKRecord was either nil or there was an error in saving to the database.")
-                if let safeError = error
+                print("Could not save the record to the cloudKitDataBase, either there is an error or the record is nil")
+                if let safeError  = error
                 {
                     print(safeError.localizedDescription)
                 }
-            }
-        }
-        
-        let recordTwo = CKRecord(recordType: ExpenseNames.transportationExpenseName)
-        recordTwo.setValue(amountSpentDict[ExpenseNames.transportationExpenseName], forKey: ExpenseNames.transportationExpenseName)
-        cloudKitDataBase.save(recordTwo) { (ckRecord, error) in
-            if(ckRecord != nil || error != nil)
-            {
-                print("Record was successfully saved in our database.")
-            }
-            else
-            {
-                print("The CKRecord was either nil or there was an error in saving to the database.")
-                if let safeError = error
+                if let safeRecord = ckRecord
                 {
-                    print(safeError.localizedDescription)
+                    print(safeRecord)
                 }
             }
         }
-        
-        let recordThree = CKRecord(recordType: ExpenseNames.carExpenseName)
-        recordThree.setValue(amountSpentDict[ExpenseNames.carExpenseName], forKey: ExpenseNames.carExpenseName)
-        cloudKitDataBase.save(recordThree) { (ckRecord, error) in
-            if(ckRecord != nil || error != nil)
-            {
-                print("Record was successfully saved in our database.")
-            }
-            else
-            {
-                print("The CKRecord was either nil or there was an error in saving to the database.")
-                if let safeError = error
-                {
-                    print(safeError.localizedDescription)
-                }
-            }
-        }
-        
-        let recordFour = CKRecord(recordType: ExpenseNames.lifeStyleExpenseName)
-        recordFour.setValue(amountSpentDict[ExpenseNames.lifeStyleExpenseName], forKey: ExpenseNames.lifeStyleExpenseName)
-        cloudKitDataBase.save(recordFour) { (ckRecord, error) in
-            if(ckRecord != nil || error != nil)
-            {
-                print("Record was successfully saved in our database.")
-            }
-            else
-            {
-                print("The CKRecord was either nil or there was an error in saving to the database.")
-                if let safeError = error
-                {
-                    print(safeError.localizedDescription)
-                }
-            }
-        }
-        
-        let recordFive = CKRecord(recordType: ExpenseNames.shoppingExpenseName)
-        recordFive.setValue(amountSpentDict[ExpenseNames.shoppingExpenseName], forKey: ExpenseNames.shoppingExpenseName)
-        cloudKitDataBase.save(recordFive) { (ckRecord, error) in
-            if(ckRecord != nil || error != nil)
-            {
-                print("Record was successfully saved in our database.")
-            }
-            else
-            {
-                print("The CKRecord was either nil or there was an error in saving to the database.")
-                if let safeError = error
-                {
-                    print(safeError.localizedDescription)
-                }
-            }
-        }
-        
-        let recordSix = CKRecord(recordType: ExpenseNames.subscriptionsExpenseName)
-        recordSix.setValue(amountSpentDict[ExpenseNames.subscriptionsExpenseName], forKey: ExpenseNames.subscriptionsExpenseName)
-        cloudKitDataBase.save(recordSix) { (ckRecord, error) in
-            if(ckRecord != nil || error != nil)
-            {
-                print("Record was successfully saved in our database.")
-            }
-            else
-            {
-                print("The CKRecord was either nil or there was an error in saving to the database.")
-                if let safeError = error
-                {
-                    print(safeError.localizedDescription)
-                }
-            }
-        }
-        
-        
-        
     }
     // MARK: - Functions
     private func initializeVC()
@@ -180,7 +97,6 @@ class HomeViewController : UIViewController
             originalAmountSpent?.round(.up)
             amountSpentDict.updateValue(originalAmountSpent! + amountSpentToAdd, forKey: typeOfExpense!)
         }
-        print(amountSpentDict)
     }
     
     private func initializeNumberOfEntriesSpentDict() // O(N) time and O(1) Space
@@ -192,7 +108,6 @@ class HomeViewController : UIViewController
             let newValue = originalValue! + 1
             numberOfEntriesDict.updateValue(newValue, forKey: typeOfExpense!)
         }
-        print(numberOfEntriesDict)
     }
     
     private func resetAllDictionaries()
@@ -204,6 +119,74 @@ class HomeViewController : UIViewController
             amountSpentDict.updateValue(0, forKey: expenseName)
         }
         
+    }
+    
+    private func dateConverted(dateToConvertAsString : String) -> String // O(N) runtime verified and works
+    {
+        // so the plan is we need to parse the string and convert it to a string format that only has alphaNumeric Characters
+        let monthsDictionary : [String : String] = [
+            "1" : "January",
+            "2" : "February",
+            "3" : "March",
+            "4" : "April",
+            "5" : "May",
+            "6" : "June",
+            "7" : "July",
+            "8" : "August",
+            "9" : "September",
+            "10" : "October",
+            "11" : "November",
+            "12" : "December"
+        ]
+        // so we know at most we will have to check 2 elements
+        var firstElement : String.Element? = nil
+        var secondElement : String.Element? = nil
+        var valueFromDict = String()
+        var stringToReturn = String()
+        var index = 0
+        for stringElement in dateToConvertAsString
+        {
+          if(index == 0)
+          {
+            firstElement = stringElement
+            index += 1
+          }
+          else if(index == 1)
+          {
+            if(stringElement == "/")
+            {
+                if let safeFirstElement = firstElement
+                {
+                    let keyToUse = String(safeFirstElement)
+                    valueFromDict = monthsDictionary[keyToUse]!
+                    stringToReturn.append(valueFromDict)
+                    index += 1
+                }
+            }
+            else
+            {
+                secondElement = stringElement
+                if let safeFirstElemenet = firstElement, let safeSecondElement = secondElement
+                {
+                    let firstElementAsString = String(safeFirstElemenet)
+                    let secondElementAsString = String(safeSecondElement)
+                    let keyToUse = firstElementAsString + secondElementAsString
+                    valueFromDict = monthsDictionary[keyToUse]!
+                    stringToReturn.append(valueFromDict)
+                    index += 1
+                }
+            }
+          }
+          else
+          {
+            if(stringElement != "/")
+            {
+                let stringToAdd = String(stringElement)
+                stringToReturn.append(stringToAdd)
+            }
+          }
+        }
+        return stringToReturn
     }
     
     private func createProgressCircle(viewToUse : UIView, strokeEnd : CGFloat)
