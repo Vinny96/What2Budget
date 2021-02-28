@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreData
+import CloudKit
 
 class HomeViewController : UIViewController
 {
@@ -20,6 +21,9 @@ class HomeViewController : UIViewController
     var numberOfEntriesDict : [String : Int] = [ExpenseNames.groceriesExpenseName : 0,ExpenseNames.transportationExpenseName : 0,ExpenseNames.carExpenseName: 0,ExpenseNames.lifeStyleExpenseName : 0,ExpenseNames.shoppingExpenseName : 0,ExpenseNames.subscriptionsExpenseName : 0,]
     
     var arrayOfExpenseNames : [String] = [ExpenseNames.groceriesExpenseName,ExpenseNames.transportationExpenseName,ExpenseNames.carExpenseName,ExpenseNames.lifeStyleExpenseName,ExpenseNames.shoppingExpenseName,ExpenseNames.subscriptionsExpenseName]
+    
+    // CloudKit Variables
+    private let cloudKitDataBase = CKContainer(identifier: "iCloud.What2BudgetExpenses").privateCloudDatabase
     
     // IB Outlets
     @IBOutlet weak var tableView: UITableView!
@@ -45,7 +49,115 @@ class HomeViewController : UIViewController
         endDate.text = defaults.string(forKey: "Set End Date")
     }
     
-    
+    //MARK: - CloudKit Functions
+    private func saveToCloudKitDB()
+    {
+        // creating and saving our record objects
+        let record = CKRecord(recordType: ExpenseNames.groceriesExpenseName)
+        record.setValue(amountSpentDict[ExpenseNames.groceriesExpenseName], forKey: ExpenseNames.groceriesExpenseName)
+        cloudKitDataBase.save(record) { (ckRecord, error) in
+            if(ckRecord != nil || error != nil)
+            {
+                print("Record was successfully saved in our database.")
+            }
+            else
+            {
+                print("The CKRecord was either nil or there was an error in saving to the database.")
+                if let safeError = error
+                {
+                    print(safeError.localizedDescription)
+                }
+            }
+        }
+        
+        let recordTwo = CKRecord(recordType: ExpenseNames.transportationExpenseName)
+        recordTwo.setValue(amountSpentDict[ExpenseNames.transportationExpenseName], forKey: ExpenseNames.transportationExpenseName)
+        cloudKitDataBase.save(recordTwo) { (ckRecord, error) in
+            if(ckRecord != nil || error != nil)
+            {
+                print("Record was successfully saved in our database.")
+            }
+            else
+            {
+                print("The CKRecord was either nil or there was an error in saving to the database.")
+                if let safeError = error
+                {
+                    print(safeError.localizedDescription)
+                }
+            }
+        }
+        
+        let recordThree = CKRecord(recordType: ExpenseNames.carExpenseName)
+        recordThree.setValue(amountSpentDict[ExpenseNames.carExpenseName], forKey: ExpenseNames.carExpenseName)
+        cloudKitDataBase.save(recordThree) { (ckRecord, error) in
+            if(ckRecord != nil || error != nil)
+            {
+                print("Record was successfully saved in our database.")
+            }
+            else
+            {
+                print("The CKRecord was either nil or there was an error in saving to the database.")
+                if let safeError = error
+                {
+                    print(safeError.localizedDescription)
+                }
+            }
+        }
+        
+        let recordFour = CKRecord(recordType: ExpenseNames.lifeStyleExpenseName)
+        recordFour.setValue(amountSpentDict[ExpenseNames.lifeStyleExpenseName], forKey: ExpenseNames.lifeStyleExpenseName)
+        cloudKitDataBase.save(recordFour) { (ckRecord, error) in
+            if(ckRecord != nil || error != nil)
+            {
+                print("Record was successfully saved in our database.")
+            }
+            else
+            {
+                print("The CKRecord was either nil or there was an error in saving to the database.")
+                if let safeError = error
+                {
+                    print(safeError.localizedDescription)
+                }
+            }
+        }
+        
+        let recordFive = CKRecord(recordType: ExpenseNames.shoppingExpenseName)
+        recordFive.setValue(amountSpentDict[ExpenseNames.shoppingExpenseName], forKey: ExpenseNames.shoppingExpenseName)
+        cloudKitDataBase.save(recordFive) { (ckRecord, error) in
+            if(ckRecord != nil || error != nil)
+            {
+                print("Record was successfully saved in our database.")
+            }
+            else
+            {
+                print("The CKRecord was either nil or there was an error in saving to the database.")
+                if let safeError = error
+                {
+                    print(safeError.localizedDescription)
+                }
+            }
+        }
+        
+        let recordSix = CKRecord(recordType: ExpenseNames.subscriptionsExpenseName)
+        recordSix.setValue(amountSpentDict[ExpenseNames.subscriptionsExpenseName], forKey: ExpenseNames.subscriptionsExpenseName)
+        cloudKitDataBase.save(recordSix) { (ckRecord, error) in
+            if(ckRecord != nil || error != nil)
+            {
+                print("Record was successfully saved in our database.")
+            }
+            else
+            {
+                print("The CKRecord was either nil or there was an error in saving to the database.")
+                if let safeError = error
+                {
+                    print(safeError.localizedDescription)
+                }
+            }
+        }
+        
+        
+        
+    }
     // MARK: - Functions
     private func initializeVC()
     {
@@ -168,6 +280,19 @@ class HomeViewController : UIViewController
         performSegue(withIdentifier: "toSettings", sender: self)
     }
     
+    @IBAction func cloudPressed(_ sender: UIBarButtonItem) {
+        let alertControllerOne = UIAlertController(title: "Save To iCloud", message: "This will save all the expense categories and the amount spent for each category to your iCloud and to our private database. ", preferredStyle: .alert)
+        let alertActionOne = UIAlertAction(title: "Save", style: .default) { (alertActionHandler) in
+            self.saveToCloudKitDB()
+        }
+        let alertActionTwo = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        alertControllerOne.addAction(alertActionOne)
+        alertControllerOne.addAction(alertActionTwo)
+        
+        present(alertControllerOne, animated: true, completion: nil)
+    }
+    
+    
     
     // MARK: - CRUD Functionality
     private func loadContext(request : NSFetchRequest<ExpenseModel> = ExpenseModel.fetchRequest())
@@ -211,13 +336,13 @@ extension HomeViewController : UITableViewDataSource
         cell.numberOfEntries.text = String(numberOfEntriesDict[arrayOfExpenseNames[indexPath.row]] ?? 0)
         cell.amountSpent.text = String(amountSpentDict[arrayOfExpenseNames[indexPath.row]] ?? 0)
         // beta code
-        let keyToUse = cell.expenseTitle.text!
+        /*let keyToUse = cell.expenseTitle.text!
         let amountSpent = amountSpentDict[keyToUse]
         let allocatedAmount = defaults.float(forKey: keyToUse)
         let strokeEnd : CGFloat = CGFloat(amountSpent! / allocatedAmount)
         print(strokeEnd)
         createProgressCircle(viewToUse: cell.circleAnimationView!, strokeEnd: strokeEnd)
-        // end of beta code
+        // end of beta code*/
         return cell
     }
     
