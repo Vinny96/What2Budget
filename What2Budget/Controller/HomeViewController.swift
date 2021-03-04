@@ -23,7 +23,7 @@ class HomeViewController : UIViewController
     var arrayOfExpenseNames : [String] = [ExpenseNames.groceriesExpenseName,ExpenseNames.transportationExpenseName,ExpenseNames.carExpenseName,ExpenseNames.lifeStyleExpenseName,ExpenseNames.shoppingExpenseName,ExpenseNames.subscriptionsExpenseName]
     
     // CloudKit Variables
-    private let cloudKitDataBase = CKContainer(identifier: "iCloud.What2BudgetExpenses").privateCloudDatabase
+    private let cloudKitDataBase = CKContainer(identifier: "iCloud.vinnyMadeApps.What2Budget").privateCloudDatabase
     
     // IB Outlets
     @IBOutlet weak var tableView: UITableView!
@@ -52,29 +52,32 @@ class HomeViewController : UIViewController
     //MARK: - CloudKit Functions
     private func saveToCloudKitDB()
     {
-        let recordName = ("ExpensesForDate")
-        let datePeriod = ("\(defaults.string(forKey: "Set Start Date") ?? "") \(defaults.string(forKey: "Seet End Date") ?? "")")
-        let record = CKRecord(recordType: recordName)
-        record.setValue(amountSpentDict, forKey: datePeriod)
-        cloudKitDataBase.save(record) { (ckRecord, error) in
-            if(ckRecord != nil || error != nil)
-            {
-                print("Successfully saved the record to the cloudKitDataBase")
-            }
-            else
-            {
-                print("Could not save the record to the cloudKitDataBase, either there is an error or the record is nil")
-                if let safeError  = error
+        // so what we want to do here is we want to get the amountSpent and amountAllocated for each expense and that is what we want to send to the cloud. By doing this we can also get push notifications working where if the user's amountSpent is getting a little bit high we can tell them to rein in the spending.
+        var amountSpent : Float = Float()
+        var amountAllocated : Float = Float()
+        for expenseName in arrayOfExpenseNames
+        {
+            amountSpent = amountSpentDict[expenseName] ?? 0
+            amountAllocated = defaults.float(forKey: expenseName)
+            let record = CKRecord(recordType: "Expense")
+            record.setValue(amountSpent, forKey: "amountSpent")
+            record.setValue(amountAllocated, forKey: "amountAllocated")
+            record.setValue(expenseName, forKey: "expenseType")
+            cloudKitDataBase.save(record) { (record, error) in
+                if(record != nil && error == nil)
                 {
-                    print(safeError.localizedDescription)
+                    print("Saved the record successfully")
                 }
-                if let safeRecord = ckRecord
+                else
                 {
-                    print(safeRecord)
+                    print("There was an error in saving the record.")
                 }
             }
+            
         }
+        
     }
+    
     // MARK: - Functions
     private func initializeVC()
     {
@@ -110,7 +113,7 @@ class HomeViewController : UIViewController
         }
     }
     
-    private func resetAllDictionaries()
+    private func resetAllDictionaries() // this method is called everytime the view will appear.
     {
         // reseting all dictionaries
         for expenseName in arrayOfExpenseNames
