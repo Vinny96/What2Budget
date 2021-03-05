@@ -20,10 +20,13 @@ class HomeViewController : UIViewController
     
     var numberOfEntriesDict : [String : Int] = [ExpenseNames.groceriesExpenseName : 0,ExpenseNames.transportationExpenseName : 0,ExpenseNames.carExpenseName: 0,ExpenseNames.lifeStyleExpenseName : 0,ExpenseNames.shoppingExpenseName : 0,ExpenseNames.subscriptionsExpenseName : 0,]
     
+    var arrayOfRecords : [CKRecord] = []
+    
     var arrayOfExpenseNames : [String] = [ExpenseNames.groceriesExpenseName,ExpenseNames.transportationExpenseName,ExpenseNames.carExpenseName,ExpenseNames.lifeStyleExpenseName,ExpenseNames.shoppingExpenseName,ExpenseNames.subscriptionsExpenseName]
     
+    
     // CloudKit Variables
-    private let cloudKitDataBase = CKContainer(identifier: "iCloud.vinnyMadeApps.What2Budget").privateCloudDatabase
+    private let privateUserCloudDataBase = CKContainer(identifier: "iCloud.vinnyMadeApps.What2Budget").privateCloudDatabase
     
     // IB Outlets
     @IBOutlet weak var tableView: UITableView!
@@ -39,43 +42,77 @@ class HomeViewController : UIViewController
     
     override func viewWillAppear(_ animated: Bool) {
         print("viewWillAppear")
-        loadContext()
-        resetAllDictionaries()
-        initializeAmountSpentDic()
-        initializeNumberOfEntriesSpentDict()
-        tableView.reloadData()
-        incomeForPeriod.text = String(defaults.float(forKey: "Set Income"))
-        startDate.text = defaults.string(forKey: "Set Start Date")
-        endDate.text = defaults.string(forKey: "Set End Date")
+        runOnViewWillLoad()
     }
     
     //MARK: - CloudKit Functions
     private func saveToCloudKitDB()
     {
         // so what we want to do here is we want to get the amountSpent and amountAllocated for each expense and that is what we want to send to the cloud. By doing this we can also get push notifications working where if the user's amountSpent is getting a little bit high we can tell them to rein in the spending.
+        let endPeriodAsString = String(defaults.string(forKey: "Set End Date") ?? "00/00/00")
         var amountSpent : Float = Float()
         var amountAllocated : Float = Float()
+        var noError : Bool = true
+        var isRecordValid : Bool = true
         for expenseName in arrayOfExpenseNames
         {
             amountSpent = amountSpentDict[expenseName] ?? 0
             amountAllocated = defaults.float(forKey: expenseName)
+            //let record = CKRecord(recordType: "Expense")
             let record = CKRecord(recordType: "Expense")
             record.setValue(amountSpent, forKey: "amountSpent")
             record.setValue(amountAllocated, forKey: "amountAllocated")
             record.setValue(expenseName, forKey: "expenseType")
-            cloudKitDataBase.save(record) { (record, error) in
+            record.setValue(endPeriodAsString, forKey: "endingTimePeriod")
+            privateUserCloudDataBase.save(record) { (record, error) in
                 if(record != nil && error == nil)
                 {
                     print("Saved the record successfully")
                 }
                 else
                 {
+                    isRecordValid = false
+                    noError = false
                     print("There was an error in saving the record.")
                 }
             }
-            
         }
+        if(isRecordValid == true && noError == true)
+        {
+            let alertController = UIAlertController(title: "Success", message: "Saved the amount spent and amount allocated for each expense.", preferredStyle: .alert)
+            let alertActionOne = UIAlertAction(title: "Ok", style: .default, handler: nil)
+            alertController.addAction(alertActionOne)
+            present(alertController, animated: true, completion: nil)
+        }
+        initializeArrayOfRecords()
+        // so this tells the database to create a new record
+        // but this does not update anything nor does it overwrite any existing records. 
+    }
+    
+    private func updateRecord()
+    {
+       
+    }
+    
+    
+    private func initializeArrayOfRecords() // N + M runtime, N being the number of elements to remove and M for the number expenseNames in arrayOfExpenseNames
+    {
+        arrayOfRecords.removeAll()
+        let endPeriodAsString = String(defaults.string(forKey: "Set End Date") ?? "00/00/00")
+        let predicateOne = NSPredicate(format: "%K == %@", argumentArray: ["expenseType",ExpenseNames.subscriptionsExpenseName])
+        let predicateTwo = NSPredicate(format: "%K == %@", argumentArray: ["endingTimePeriod",endPeriodAsString])
+        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicateOne,predicateTwo])
+        let query = CKQuery(recordType: "Expense", predicate: compoundPredicate)
+        let operation = CKQueryOperation(query: query)
+        operation.recordFetchedBlock = { record in
+            print(record)
+            self.arrayOfRecords.append(record)
+        }
+        privateUserCloudDataBase.add(operation)
         
+        // this will be used to get the 6 records that are in use for the time period. Will be called in the viewWillAppear method as the user will add expenses in another viewController and we want to call this in the viewWillAppear. Reason being is that if we call this in viewDidLoad this will only be called once but we want this to be called after the users comes back from anotherViewController. Now this will be called if the user comes back from any viewController but this will have to do for now.
+        // nothing is being appened to arrayOfRecords figure out why we have to add the operation once everything regarding the operation has been created. We are getting the subscriptions expense!!!
+        // now we have to modify the code so we can get all of the expenses in one fell sweoop
     }
     
     // MARK: - Functions
@@ -88,6 +125,19 @@ class HomeViewController : UIViewController
         print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
         tableView.register(UINib(nibName: "mainTableViewCell", bundle: .main), forCellReuseIdentifier: "mainCellToUse")
         print("View Controller is being initialized.")
+    }
+    
+    private func runOnViewWillLoad()
+    {
+        loadContext()
+        resetAllDictionaries()
+        initializeAmountSpentDic()
+        initializeNumberOfEntriesSpentDict()
+        initializeArrayOfRecords()
+        tableView.reloadData()
+        incomeForPeriod.text = String(defaults.float(forKey: "Set Income"))
+        startDate.text = defaults.string(forKey: "Set Start Date")
+        endDate.text = defaults.string(forKey: "Set End Date")
     }
     
     private func initializeAmountSpentDic() // O(N) Time and O(1) Space
@@ -123,6 +173,7 @@ class HomeViewController : UIViewController
         }
         
     }
+    
     
     private func dateConverted(dateToConvertAsString : String) -> String // O(N) runtime verified and works
     {
@@ -261,6 +312,7 @@ class HomeViewController : UIViewController
         }
     }
     
+    
     // MARK: - IBActions
     @IBAction func settingsPressed(_ sender: UIBarButtonItem) {
         performSegue(withIdentifier: "toSettings", sender: self)
@@ -270,6 +322,7 @@ class HomeViewController : UIViewController
         let alertControllerOne = UIAlertController(title: "Save To iCloud", message: "This will save all the expense categories and the amount spent for each category to your iCloud and to our private database. ", preferredStyle: .alert)
         let alertActionOne = UIAlertAction(title: "Save", style: .default) { (alertActionHandler) in
             self.saveToCloudKitDB()
+            // call a helper method that will determine which method to call helper method will check to see if any recrods do exist and if they do we can proceed from there
         }
         let alertActionTwo = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         alertControllerOne.addAction(alertActionOne)
@@ -343,7 +396,7 @@ extension HomeViewController : UITableViewDataSource
  So with the three dictionary methods in the viewWillAppear method this is the explanation behind them. Anytime we add a new expense object in the expenseTableView we want these changes to be reflected in our HomeViewController. HomeViewController is only loaded in once so we cannot pass these methods into viewDidLoad as it will only get called the first time and will not get called again. So in order for the changes to be relfected in this view controller the methods have to be called in the viewWillAppear method. Now one issue that arose is when we switched back and forth from the two viewControllers the values for both dictionaries kept doubling and did not reflect the true value of the total expenseModelObjects nor the number of expenseModelObjects for the entries. So what we did to fix this is we did a reset method. So anytime we come back from expenseTableViewController we would reset both dictionaries to have a value of zero for all keys. Then we call the initialize dictionaries methods to get the appropriate values for the keys and this way we can avoid the doubling. It would be ideal if there was a way to check if the data was changed in the expenseTableViewController and we can maybe some kind of variable down from that view controller to the homeViewController. If this variable indicates that changes have happened then we can do the reset and initialize method.We also have to call load context in the viewWillAppear everytime as we have to take into account the new expenseModel object we have added in the expenseTableView controller. Run time is linear and it would help if this is opitimized. Run time is O(3N) which is O(N).
  
  
- 
+ So what we are doing here is we want to have eaxh expenese name have an ASCII string value. For the record ID we need a name that is an ASCII string
  
  
  
