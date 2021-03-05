@@ -46,7 +46,7 @@ class HomeViewController : UIViewController
     }
     
     //MARK: - CloudKit Functions
-    private func saveToCloudKitDB()
+    private func saveRecordToDataBase()
     {
         // so what we want to do here is we want to get the amountSpent and amountAllocated for each expense and that is what we want to send to the cloud. By doing this we can also get push notifications working where if the user's amountSpent is getting a little bit high we can tell them to rein in the spending.
         let endPeriodAsString = String(defaults.string(forKey: "Set End Date") ?? "00/00/00")
@@ -84,7 +84,7 @@ class HomeViewController : UIViewController
             alertController.addAction(alertActionOne)
             present(alertController, animated: true, completion: nil)
         }
-        initializeArrayOfRecords()
+        readRecordFromDataBase()
         // so this tells the database to create a new record
         // but this does not update anything nor does it overwrite any existing records. 
     }
@@ -95,12 +95,14 @@ class HomeViewController : UIViewController
     }
     
     
-    private func initializeArrayOfRecords() // N + M runtime, N being the number of elements to remove and M for the number expenseNames in arrayOfExpenseNames
+    private func readRecordFromDataBase() // M + N runtime as M records to remove plus N record to add. 
     {
         arrayOfRecords.removeAll()
         let endPeriodAsString = String(defaults.string(forKey: "Set End Date") ?? "00/00/00")
-        let predicateOne = NSPredicate(format: "%K == %@", argumentArray: ["expenseType",ExpenseNames.subscriptionsExpenseName])
-        let predicateTwo = NSPredicate(format: "%K == %@", argumentArray: ["endingTimePeriod",endPeriodAsString])
+        //let predicateOne = NSPredicate(format: "%K == %@", argumentArray: ["expenseType",ExpenseNames.subscriptionsExpenseName])
+        //let predicateTwo = NSPredicate(format: "%K == %@", argumentArray: ["endingTimePeriod",endPeriodAsString])
+        let predicateOne = NSPredicate(format: "expenseType == %@", ExpenseNames.subscriptionsExpenseName)
+        let predicateTwo = NSPredicate(format: "endingTimePeriod == %@", endPeriodAsString)
         let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicateOne,predicateTwo])
         let query = CKQuery(recordType: "Expense", predicate: compoundPredicate)
         let operation = CKQueryOperation(query: query)
@@ -110,9 +112,7 @@ class HomeViewController : UIViewController
         }
         privateUserCloudDataBase.add(operation)
         
-        // this will be used to get the 6 records that are in use for the time period. Will be called in the viewWillAppear method as the user will add expenses in another viewController and we want to call this in the viewWillAppear. Reason being is that if we call this in viewDidLoad this will only be called once but we want this to be called after the users comes back from anotherViewController. Now this will be called if the user comes back from any viewController but this will have to do for now.
-        // nothing is being appened to arrayOfRecords figure out why we have to add the operation once everything regarding the operation has been created. We are getting the subscriptions expense!!!
-        // now we have to modify the code so we can get all of the expenses in one fell sweoop
+        // what this method does is that it gets all the records from our database that matches our CkQuery and we then add that record in our arrayOfRecrods. So this operation can actually return more than one record however because we are adding a predicate in which we are filtering it by endingTimePeriod sand because of the way our database is structured only one record is ever going to be returned that matches the expenseType and endingTimePeriod. So when we do the update operation we have to make sure that we update this record and not create a new one. 
     }
     
     // MARK: - Functions
@@ -133,7 +133,7 @@ class HomeViewController : UIViewController
         resetAllDictionaries()
         initializeAmountSpentDic()
         initializeNumberOfEntriesSpentDict()
-        initializeArrayOfRecords()
+        readRecordFromDataBase()
         tableView.reloadData()
         incomeForPeriod.text = String(defaults.float(forKey: "Set Income"))
         startDate.text = defaults.string(forKey: "Set Start Date")
@@ -321,7 +321,7 @@ class HomeViewController : UIViewController
     @IBAction func cloudPressed(_ sender: UIBarButtonItem) {
         let alertControllerOne = UIAlertController(title: "Save To iCloud", message: "This will save all the expense categories and the amount spent for each category to your iCloud and to our private database. ", preferredStyle: .alert)
         let alertActionOne = UIAlertAction(title: "Save", style: .default) { (alertActionHandler) in
-            self.saveToCloudKitDB()
+            self.saveRecordToDataBase()
             // call a helper method that will determine which method to call helper method will check to see if any recrods do exist and if they do we can proceed from there
         }
         let alertActionTwo = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
