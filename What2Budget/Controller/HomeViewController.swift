@@ -195,17 +195,16 @@ class HomeViewController : UIViewController
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
         tableView.register(UINib(nibName: "mainTableViewCell", bundle: .main), forCellReuseIdentifier: "mainCellToUse")
-        print("View Controller is being initialized.")
-    }
-    
-    private func runOnViewWillLoad()
-    {
         loadContext()
         resetAllDictionaries()
         initializeAmountSpentDic()
         initializeNumberOfEntriesSpentDict()
         readAllCurrentRecordsFromDataBase()
-        tableView.reloadData()
+        print("View Controller is being initialized.")
+    }
+    
+    private func runOnViewWillLoad()
+    {
         incomeForPeriod.text = String(defaults.float(forKey: "Set Income"))
         startDate.text = defaults.string(forKey: "Set Start Date")
         endDate.text = defaults.string(forKey: "Set End Date")
@@ -221,6 +220,7 @@ class HomeViewController : UIViewController
             originalAmountSpent?.round(.up)
             amountSpentDict.updateValue(originalAmountSpent! + amountSpentToAdd, forKey: typeOfExpense!)
         }
+        print(amountSpentDict)
     }
     
     private func initializeNumberOfEntriesSpentDict() // O(N) time and O(1) Space
@@ -232,6 +232,7 @@ class HomeViewController : UIViewController
             let newValue = originalValue! + 1
             numberOfEntriesDict.updateValue(newValue, forKey: typeOfExpense!)
         }
+        print(numberOfEntriesDict)
     }
     
     private func resetAllDictionaries() // this method is called everytime the view will appear. Does not reset the expenseRecordName dictionary
@@ -253,20 +254,21 @@ class HomeViewController : UIViewController
         }
         if(segue.identifier == "toExpenseTableView")
         {
-            let destinationVC = segue.destination as! expenseTableViewController
+            let destinationVC = segue.destination as! ExpenseTableViewController
             let selectedIndexPath = tableView.indexPathForSelectedRow
-           if let safeIndexPath = selectedIndexPath
-           {
-            destinationVC.typeOfExpense = arrayOfExpenseNames[safeIndexPath.row]
-            if let safeStartDate = startDate.text
+            if let safeIndexPath = selectedIndexPath
             {
-                destinationVC.startDateAsString = safeStartDate
+                destinationVC.typeOfExpense = arrayOfExpenseNames[safeIndexPath.row]
+                if let safeStartDate = startDate.text
+                {
+                    destinationVC.startDateAsString = safeStartDate
+                }
+                if let safeEndDate = endDate.text
+                {
+                    destinationVC.endDateAsString = safeEndDate
+                }
             }
-            if let safeEndDate = endDate.text
-            {
-                destinationVC.endDateAsString = safeEndDate
-            }
-           }
+            destinationVC.didPersistedChangeDelegate = self
         }
     }
     
@@ -338,9 +340,23 @@ extension HomeViewController : UITableViewDataSource
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
+}
+
+//MARK: - Protocol implementaiton
+extension HomeViewController : didPersistedDataChange
+{
+    func persistedDataChanged() {
+        loadContext()
+        resetAllDictionaries()
+        initializeAmountSpentDic()
+        initializeNumberOfEntriesSpentDict()
+        tableView.reloadData()
+        print("Running from inside the persistedDataChange method in HomeViewController")
+    }
     
     
 }
+
 //MARK: - Explanation
 /*
  So with the three dictionary methods in the viewWillAppear method this is the explanation behind them. Anytime we add a new expense object in the expenseTableView we want these changes to be reflected in our HomeViewController. HomeViewController is only loaded in once so we cannot pass these methods into viewDidLoad as it will only get called the first time and will not get called again. So in order for the changes to be relfected in this view controller the methods have to be called in the viewWillAppear method. Now one issue that arose is when we switched back and forth from the two viewControllers the values for both dictionaries kept doubling and did not reflect the true value of the total expenseModelObjects nor the number of expenseModelObjects for the entries. So what we did to fix this is we did a reset method. So anytime we come back from expenseTableViewController we would reset both dictionaries to have a value of zero for all keys. Then we call the initialize dictionaries methods to get the appropriate values for the keys and this way we can avoid the doubling. It would be ideal if there was a way to check if the data was changed in the expenseTableViewController and we can maybe some kind of variable down from that view controller to the homeViewController. If this variable indicates that changes have happened then we can do the reset and initialize method.We also have to call load context in the viewWillAppear everytime as we have to take into account the new expenseModel object we have added in the expenseTableView controller. Run time is linear and it would help if this is opitimized. Run time is O(3N) which is O(N).

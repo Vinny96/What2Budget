@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import CoreData
 
-class expenseTableViewController : UIViewController
+class ExpenseTableViewController : UIViewController
 {
     // variables
     var arrayOfExpenses : [ExpenseModel] = []
@@ -23,6 +23,9 @@ class expenseTableViewController : UIViewController
     @IBOutlet weak var endDate: UILabel!
     @IBOutlet weak var tableView: UITableView!
     
+    
+    // Delegates
+    var didPersistedChangeDelegate : didPersistedDataChange?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,6 +69,10 @@ class expenseTableViewController : UIViewController
                 self.saveContext()
                 DispatchQueue.main.async {
                     self.tableView.reloadData()
+                    if let safePersistedDidChangeDelegatre = self.didPersistedChangeDelegate
+                    {
+                        safePersistedDidChangeDelegatre.persistedDataChanged()
+                    }
                 }
             }
             else
@@ -116,7 +123,6 @@ class expenseTableViewController : UIViewController
             {
                 expenseObjToAdd.companyName = textFieldOne.text!
                 expenseObjToAdd.typeOfExpense = self.typeOfExpense
-                //expenseObjToAdd.receipt = nil
                 self.present(alertControllerTwo, animated: true, completion: nil)
             }
             else
@@ -131,6 +137,11 @@ class expenseTableViewController : UIViewController
         alertControllerOne.addAction(alertActionTwo)
       
         present(alertControllerOne, animated: true, completion: nil)
+    }
+    
+    private func useOCR()
+    {
+        // to be implemented 
     }
     
     
@@ -180,14 +191,17 @@ class expenseTableViewController : UIViewController
             print(error.localizedDescription)
         }
     }
+    
+    
+    // MARK: - Protocol creations
 }
 //MARK: - TableView Extensions
-extension expenseTableViewController : UITableViewDelegate
+extension ExpenseTableViewController : UITableViewDelegate
 {
     
 }
 
-extension expenseTableViewController : UITableViewDataSource
+extension ExpenseTableViewController : UITableViewDataSource
 {
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
@@ -205,5 +219,12 @@ extension expenseTableViewController : UITableViewDataSource
         return cell
     }
     
+}
+
+//MARK: - Protocols
+protocol didPersistedDataChange {
+    func persistedDataChanged()
+    
+    // so what we want to do with this protocol is that whenver the persisted data has changed we want to call the function. However in order for the communication between the two viewControllers to properly work we need to implement in the HomeViewController. In the prepareForSegue method we then want to then set the delegate to the HomeViewController so when we call the method here the implementation in the HomeViewControler will be the one that is executed.
 }
 
