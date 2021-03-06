@@ -5,6 +5,7 @@
 //  Created by Vinojen Gengatharan on 2021-02-21.
 //
 
+import Foundation
 import UIKit
 import CoreData
 import CloudKit
@@ -20,7 +21,7 @@ class HomeViewController : UIViewController
     
     var numberOfEntriesDict : [String : Int] = [ExpenseNames.groceriesExpenseName : 0,ExpenseNames.transportationExpenseName : 0,ExpenseNames.carExpenseName: 0,ExpenseNames.lifeStyleExpenseName : 0,ExpenseNames.shoppingExpenseName : 0,ExpenseNames.subscriptionsExpenseName : 0,]
     
-    var arrayOfRecords : [CKRecord] = []
+    var expenseNameRecordDict : [String : CKRecord] = [:]
     
     var arrayOfExpenseNames : [String] = [ExpenseNames.groceriesExpenseName,ExpenseNames.transportationExpenseName,ExpenseNames.carExpenseName,ExpenseNames.lifeStyleExpenseName,ExpenseNames.shoppingExpenseName,ExpenseNames.subscriptionsExpenseName]
     
@@ -50,69 +51,139 @@ class HomeViewController : UIViewController
     {
         // so what we want to do here is we want to get the amountSpent and amountAllocated for each expense and that is what we want to send to the cloud. By doing this we can also get push notifications working where if the user's amountSpent is getting a little bit high we can tell them to rein in the spending.
         let endPeriodAsString = String(defaults.string(forKey: "Set End Date") ?? "00/00/00")
-        var amountSpent : Float = Float()
-        var amountAllocated : Float = Float()
-        var noError : Bool = true
-        var isRecordValid : Bool = true
-        for expenseName in arrayOfExpenseNames
+        if(endPeriodAsString == "00/00/00")
         {
-            amountSpent = amountSpentDict[expenseName] ?? 0
-            amountAllocated = defaults.float(forKey: expenseName)
-            //let record = CKRecord(recordType: "Expense")
-            let record = CKRecord(recordType: "Expense")
-            record.setValue(amountSpent, forKey: "amountSpent")
-            record.setValue(amountAllocated, forKey: "amountAllocated")
-            record.setValue(expenseName, forKey: "expenseType")
-            record.setValue(endPeriodAsString, forKey: "endingTimePeriod")
-            privateUserCloudDataBase.save(record) { (record, error) in
-                if(record != nil && error == nil)
-                {
-                    print("Saved the record successfully")
-                }
-                else
-                {
-                    isRecordValid = false
-                    noError = false
-                    print("There was an error in saving the record.")
+            let alertControllerToPresent = UIAlertController(title: "Please set valid date", message: "Please go to settings and set a valid date and fill all of the info before saving to the cloud.", preferredStyle: .alert)
+            let alertActionOne = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+            let alertActionTwo = UIAlertAction(title: "Go To Settings", style: .default) { (alertActionTwo) in
+                DispatchQueue.main.async {
+                    self.performSegue(withIdentifier: "toSettings", sender: self)
                 }
             }
+            alertControllerToPresent.addAction(alertActionOne)
+            alertControllerToPresent.addAction(alertActionTwo)
+            present(alertControllerToPresent, animated: true, completion: nil)
         }
-        if(isRecordValid == true && noError == true)
+        else
         {
-            let alertController = UIAlertController(title: "Success", message: "Saved the amount spent and amount allocated for each expense.", preferredStyle: .alert)
-            let alertActionOne = UIAlertAction(title: "Ok", style: .default, handler: nil)
-            alertController.addAction(alertActionOne)
-            present(alertController, animated: true, completion: nil)
+            var amountSpent : Float = Float()
+            var amountAllocated : Float = Float()
+            var noError : Bool = true
+            var isRecordValid : Bool = true
+            for expenseName in arrayOfExpenseNames
+            {
+                amountSpent = amountSpentDict[expenseName] ?? 0
+                amountAllocated = defaults.float(forKey: expenseName)
+                //let record = CKRecord(recordType: "Expense")
+                let record = CKRecord(recordType: "Expense")
+                record.setValue(amountSpent, forKey: "amountSpent")
+                record.setValue(amountAllocated, forKey: "amountAllocated")
+                record.setValue(expenseName, forKey: "expenseType")
+                record.setValue(endPeriodAsString, forKey: "endingTimePeriod")
+                privateUserCloudDataBase.save(record) { (record, error) in
+                    if(record != nil && error == nil)
+                    {
+                        print("Saved the record successfully")
+                        if let safeRecord = record
+                        {
+                            print(safeRecord)
+                            self.expenseNameRecordDict.updateValue(safeRecord, forKey: expenseName)
+                            // appends to the dictionary successfully
+                        }
+                    }
+                    else
+                    {
+                        isRecordValid = false
+                        noError = false
+                        print("There was an error in saving the record.")
+                    }
+                }
+            }
+            if(isRecordValid == true && noError == true)
+            {
+                let alertController = UIAlertController(title: "Success", message: "Saved the amount spent and amount allocated for each expense.", preferredStyle: .alert)
+                let alertActionOne = UIAlertAction(title: "Ok", style: .default, handler: nil)
+                alertController.addAction(alertActionOne)
+                present(alertController, animated: true, completion: nil)
+            }
         }
-        readRecordFromDataBase()
-        // so this tells the database to create a new record
-        // but this does not update anything nor does it overwrite any existing records. 
     }
     
     private func updateRecord()
     {
-       
+        // so one thing we know is that when we update the record the expenseNameRecordDict should already be filled with the necessary records we need. We can use this to get the record ID we want and we can get the expense type from the record and we can update this record with the amount spent value from the amount spend dictionary.
+        // so this method will be updating all of the records
+        // we want to iterate through all of the pairs in expenseNameRecordDict and from there we want to proceed to modify each record with new amountSpentValue
+        // so to save time we only want to update the record on the server if the value is different than what is on the server
+        // O(N) runtime as because we are using the record ID to fetch it this should be in fact a constant time operation so the run time for this function is O(N)
+        for pair in expenseNameRecordDict
+        {
+            let recordToUse = pair.value
+            let recordID = recordToUse.recordID
+            let expenseType = recordToUse.value(forKey: "expenseType")
+            let valueFromServer = recordToUse.value(forKey: "amountSpent")
+            if let safeExpenseType = expenseType, let safeValueFromServer = valueFromServer
+            {
+                let expenseType = safeExpenseType as! String
+                let expenseValueFromServer = safeValueFromServer as! Float
+                let expenseValue = amountSpentDict[expenseType]!
+                if(expenseValue != expenseValueFromServer)
+                {
+                    let recordFetched = privateUserCloudDataBase.fetch(withRecordID: recordID) { (recordFetched, error) in
+                        if let safeRecord = recordFetched
+                        {
+                            safeRecord.setValue(expenseValue, forKey: "amountSpent")
+                            self.privateUserCloudDataBase.save(safeRecord) { (record, error) in
+                                if(record != nil && error == nil)
+                                {
+                                    print("Record has been successfully updated and saved onto the cloud database.")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     
     
-    private func readRecordFromDataBase() // M + N runtime as M records to remove plus N record to add. 
+    private func readRecordFromDataBase(expenseName : String) // 0(N) runtime N being the if our entry in the database is the very last one.
     {
-        arrayOfRecords.removeAll()
         let endPeriodAsString = String(defaults.string(forKey: "Set End Date") ?? "00/00/00")
-        //let predicateOne = NSPredicate(format: "%K == %@", argumentArray: ["expenseType",ExpenseNames.subscriptionsExpenseName])
-        //let predicateTwo = NSPredicate(format: "%K == %@", argumentArray: ["endingTimePeriod",endPeriodAsString])
-        let predicateOne = NSPredicate(format: "expenseType == %@", ExpenseNames.subscriptionsExpenseName)
+        let predicateOne = NSPredicate(format: "expenseType == %@", expenseName)
         let predicateTwo = NSPredicate(format: "endingTimePeriod == %@", endPeriodAsString)
         let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicateOne,predicateTwo])
         let query = CKQuery(recordType: "Expense", predicate: compoundPredicate)
         let operation = CKQueryOperation(query: query)
         operation.recordFetchedBlock = { record in
+            self.expenseNameRecordDict.updateValue(record, forKey: expenseName)
             print(record)
-            self.arrayOfRecords.append(record)
         }
         privateUserCloudDataBase.add(operation)
         
-        // what this method does is that it gets all the records from our database that matches our CkQuery and we then add that record in our arrayOfRecrods. So this operation can actually return more than one record however because we are adding a predicate in which we are filtering it by endingTimePeriod sand because of the way our database is structured only one record is ever going to be returned that matches the expenseType and endingTimePeriod. So when we do the update operation we have to make sure that we update this record and not create a new one. 
+        // what this method does is that it gets all the records from our database that matches our CkQuery and we then add that record in our arrayOfRecrods. So this operation can actually return more than one record however because we are adding a predicate in which we are filtering it by endingTimePeriod sand because of the way our database is structured only one record is ever going to be returned that matches the expenseType and endingTimePeriod. So when we do the update operation we have to make sure that we update this record and not create a new one.
+    }
+    
+    private func readAllCurrentRecordsFromDataBase() // O(N*M) runtime because the database is only ever going to contain 1 record of each expense type that matches both predicates from above but it needs to search a database of size M to get it. However when database is empty just O(N)
+    {
+        for expenseName in arrayOfExpenseNames
+        {
+            readRecordFromDataBase(expenseName: expenseName)
+        }
+        print("Dictionary name is being printed below.")
+        print(expenseNameRecordDict)
+    }
+    
+    private func saveAndUpdateToCloudHandler() // this is the function that we want to be either saving to the cloud or updating to the cloud
+    {
+        // how is this going to work
+        // so this is going to be the function that will be called when it comes to saving or updating to the cloud. We then want this function to check the cloudDB and see if any records exist and if they do we then rpoceed to call the updateRecord function. However if no records exists that match the dateEndingPeriod then we save them to the cloudDB.
+        // So to check to see if any records exist in the DB that end with the current endingPeriod we can do a simple query and if any recrods are fetched we can assign a boolean to true. This means that we have to update the records instead and if no records exist the boolean will be false so this means we have to save the records instead.
+        // to check if the database has any records we can simply just pull one random record using any expenseName and the current endingDatePeriod because if this does not exist then there are no records at all. If they do exist then there are records
+        
+        
+        
+        
     }
     
     // MARK: - Functions
@@ -133,7 +204,7 @@ class HomeViewController : UIViewController
         resetAllDictionaries()
         initializeAmountSpentDic()
         initializeNumberOfEntriesSpentDict()
-        readRecordFromDataBase()
+        readAllCurrentRecordsFromDataBase()
         tableView.reloadData()
         incomeForPeriod.text = String(defaults.float(forKey: "Set Income"))
         startDate.text = defaults.string(forKey: "Set Start Date")
@@ -163,7 +234,7 @@ class HomeViewController : UIViewController
         }
     }
     
-    private func resetAllDictionaries() // this method is called everytime the view will appear.
+    private func resetAllDictionaries() // this method is called everytime the view will appear. Does not reset the expenseRecordName dictionary
     {
         // reseting all dictionaries
         for expenseName in arrayOfExpenseNames
@@ -174,119 +245,6 @@ class HomeViewController : UIViewController
         
     }
     
-    
-    private func dateConverted(dateToConvertAsString : String) -> String // O(N) runtime verified and works
-    {
-        // so the plan is we need to parse the string and convert it to a string format that only has alphaNumeric Characters
-        let monthsDictionary : [String : String] = [
-            "1" : "January",
-            "2" : "February",
-            "3" : "March",
-            "4" : "April",
-            "5" : "May",
-            "6" : "June",
-            "7" : "July",
-            "8" : "August",
-            "9" : "September",
-            "10" : "October",
-            "11" : "November",
-            "12" : "December"
-        ]
-        // so we know at most we will have to check 2 elements
-        var firstElement : String.Element? = nil
-        var secondElement : String.Element? = nil
-        var valueFromDict = String()
-        var stringToReturn = String()
-        var index = 0
-        for stringElement in dateToConvertAsString
-        {
-          if(index == 0)
-          {
-            firstElement = stringElement
-            index += 1
-          }
-          else if(index == 1)
-          {
-            if(stringElement == "/")
-            {
-                if let safeFirstElement = firstElement
-                {
-                    let keyToUse = String(safeFirstElement)
-                    valueFromDict = monthsDictionary[keyToUse]!
-                    stringToReturn.append(valueFromDict)
-                    index += 1
-                }
-            }
-            else
-            {
-                secondElement = stringElement
-                if let safeFirstElemenet = firstElement, let safeSecondElement = secondElement
-                {
-                    let firstElementAsString = String(safeFirstElemenet)
-                    let secondElementAsString = String(safeSecondElement)
-                    let keyToUse = firstElementAsString + secondElementAsString
-                    valueFromDict = monthsDictionary[keyToUse]!
-                    stringToReturn.append(valueFromDict)
-                    index += 1
-                }
-            }
-          }
-          else
-          {
-            if(stringElement != "/")
-            {
-                let stringToAdd = String(stringElement)
-                stringToReturn.append(stringToAdd)
-            }
-          }
-        }
-        return stringToReturn
-    }
-    
-    private func createProgressCircle(viewToUse : UIView, strokeEnd : CGFloat)
-    {
-        let circleLayerPath = UIBezierPath(arcCenter: CGPoint(x: viewToUse.frame.size.width / 2, y: viewToUse.frame.size.height / 2), radius: viewToUse.frame.size.height / 2, startAngle: 0, endAngle: 2*CGFloat.pi, clockwise: true)
-        let trackLayer = CAShapeLayer()
-        trackLayer.path = circleLayerPath.cgPath
-        trackLayer.fillColor = UIColor.clear.cgColor
-        trackLayer.lineWidth = 3
-        trackLayer.lineCap = .round
-        trackLayer.position = viewToUse.center
-        viewToUse.layer.addSublayer(trackLayer)
-        
-        let shapeLayer = CAShapeLayer()
-        shapeLayer.path = circleLayerPath.cgPath
-        shapeLayer.transform = CATransform3DMakeRotation(-CGFloat.pi / 2, 0, 0, 1)
-        shapeLayer.strokeEnd = CGFloat(strokeEnd)
-        shapeLayer.fillColor = UIColor.clear.cgColor
-        shapeLayer.strokeColor = UIColor.red.cgColor
-        shapeLayer.lineWidth = 1
-        shapeLayer.lineCap = .round
-        shapeLayer.position = viewToUse.center
-        viewToUse.layer.addSublayer(shapeLayer)
-        
-        // animating the shapeLayer
-        removeAllAnimations(shapeLayerToRemoveAnimationsFrom: shapeLayer)
-        animateShapeLayer(shapeLayerToAnimate: shapeLayer)
-        
-    }
-    
-    private func animateShapeLayer(shapeLayerToAnimate : CAShapeLayer)
-    {
-        print("animating")
-        let animation = CABasicAnimation(keyPath: "strokeEnd")
-        animation.toValue = 1
-        animation.duration = 2.0
-        animation.fillMode = .forwards
-        animation.isRemovedOnCompletion = false
-        shapeLayerToAnimate.add(animation, forKey: "animate")
-    }
-    
-    private func removeAllAnimations(shapeLayerToRemoveAnimationsFrom shapeLayer : CAShapeLayer)
-    {
-        shapeLayer.removeAllAnimations()
-        
-    }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if(segue.identifier == "toSettings")
@@ -374,14 +332,6 @@ extension HomeViewController : UITableViewDataSource
         cell.amountAllocated.text = String(defaults.float(forKey: arrayOfExpenseNames[indexPath.row]))
         cell.numberOfEntries.text = String(numberOfEntriesDict[arrayOfExpenseNames[indexPath.row]] ?? 0)
         cell.amountSpent.text = String(amountSpentDict[arrayOfExpenseNames[indexPath.row]] ?? 0)
-        // beta code
-        /*let keyToUse = cell.expenseTitle.text!
-        let amountSpent = amountSpentDict[keyToUse]
-        let allocatedAmount = defaults.float(forKey: keyToUse)
-        let strokeEnd : CGFloat = CGFloat(amountSpent! / allocatedAmount)
-        print(strokeEnd)
-        createProgressCircle(viewToUse: cell.circleAnimationView!, strokeEnd: strokeEnd)
-        // end of beta code*/
         return cell
     }
     
@@ -396,7 +346,7 @@ extension HomeViewController : UITableViewDataSource
  So with the three dictionary methods in the viewWillAppear method this is the explanation behind them. Anytime we add a new expense object in the expenseTableView we want these changes to be reflected in our HomeViewController. HomeViewController is only loaded in once so we cannot pass these methods into viewDidLoad as it will only get called the first time and will not get called again. So in order for the changes to be relfected in this view controller the methods have to be called in the viewWillAppear method. Now one issue that arose is when we switched back and forth from the two viewControllers the values for both dictionaries kept doubling and did not reflect the true value of the total expenseModelObjects nor the number of expenseModelObjects for the entries. So what we did to fix this is we did a reset method. So anytime we come back from expenseTableViewController we would reset both dictionaries to have a value of zero for all keys. Then we call the initialize dictionaries methods to get the appropriate values for the keys and this way we can avoid the doubling. It would be ideal if there was a way to check if the data was changed in the expenseTableViewController and we can maybe some kind of variable down from that view controller to the homeViewController. If this variable indicates that changes have happened then we can do the reset and initialize method.We also have to call load context in the viewWillAppear everytime as we have to take into account the new expenseModel object we have added in the expenseTableView controller. Run time is linear and it would help if this is opitimized. Run time is O(3N) which is O(N).
  
  
- So what we are doing here is we want to have eaxh expenese name have an ASCII string value. For the record ID we need a name that is an ASCII string
+ the varible currentRecord refers to records whose endingTimePeriod is the exact same as the endingDate as our DataBase will also contain older recrods that we want to have so the user can compare any of the older records with the newer ones.
  
  
  
